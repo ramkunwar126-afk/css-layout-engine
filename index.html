@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Layout Studio & Fullscreen Playground</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.3s;
+        }
+
+        /* Sidebar Controls */
+        .sidebar {
+            width: 380px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: transform 0.3s ease, margin-left 0.3s ease;
+            z-index: 20;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.4rem;
+            color: var(--accent-color);
+        }
+
+        .sidebar-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 15px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex-grow: 1;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="range"], input[type="text"], button {
+            width: 100%;
+            padding: 9px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        select:focus, input[type="range"]:focus, input[type="text"]:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .range-label-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            cursor: pointer;
+            background-color: #334155;
+            font-weight: 600;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background-color: #475569;
+        }
+
+        .btn-accent {
+            background-color: #0284c7;
+        }
+        .btn-accent:hover {
+            background-color: #0ea5e9;
+        }
+
+        /* Text Input Generator Area */
+        .text-inputs-container {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.15);
+        }
+
+        .item-text-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .item-text-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .item-text-row span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            min-width: 50px;
+        }
+
+        /* Workspace Panels */
+        .workspace {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .preview-viewport {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            transition: padding 0.3s ease;
+        }
+
+        /* Main Sandbox Container */
+        #layout-sandbox {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            width: 100%;
+            height: 100%;
+            max-width: 900px;
+            max-height: 550px;
+            padding: 15px;
+            overflow: auto;
+            transition: all 0.3s ease;
+        }
+
+        /* Child Structural Box Layouts */
+        .sandbox-item {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #38bdf8;
+            color: var(--text-color);
+            border-radius: 6px;
+            padding: 10px;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* Image settings */
+        .sandbox-item img {
+            width: 100%;
+            height: 65%;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: none;
+            background-color: #334155;
+        }
+
+        .sandbox-item.has-image img {
+            display: block;
+        }
+
+        .sandbox-item p {
+            font-size: 0.85rem;
+            word-break: break-word;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        /* Code Output Area */
+        .code-panel {
+            height: 220px;
+            background-color: #0b0f19;
+            border-top: 1px solid var(--border-color);
+            padding: 15px;
+            position: relative;
+            transition: transform 0.3s ease, height 0.3s ease;
+        }
+
+        .code-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .tab-btn {
+            background-color: #1e293b;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            width: auto;
+        }
+
+        .tab-btn.active {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .code-panel pre {
+            font-family: 'Courier New', Courier, monospace;
+            color: #34d399;
+            font-size: 0.85rem;
+            overflow: auto;
+            height: calc(100% - 35px);
+        }
+
+        .top-action-bar {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 30;
+        }
+
+        .top-action-bar .btn {
+            width: auto;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+        }
+
+        /* Conditional Selector Styling */
+        .cond-flex, .cond-grid, .cond-inline, .cond-float, .cond-image { display: none; }
+        body[data-mode="flex"] .cond-flex { display: block; }
+        body[data-mode="grid"] .cond-grid { display: block; }
+        body[data-mode="inline"] .cond-inline { display: block; }
+        body[data-mode="float"] .cond-float { display: block; }
+        body[data-content="image"] .cond-image { display: block; }
+
+        /* --- FULL SCREEN OVERRIDE STATES --- */
+        body.fullscreen-active .sidebar {
+            margin-left: -380px;
+        }
+        body.fullscreen-active .code-panel {
+            transform: translateY(220px);
+            height: 0px;
+            padding: 0;
+            border: none;
+        }
+        body.fullscreen-active .preview-viewport {
+            padding: 0;
+        }
+        body.fullscreen-active #layout-sandbox {
+            max-width: 100vw;
+            max-height: 100vh;
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            border-radius: 0;
+            background-color: transparent;
+        }
+        #exitFullscreenBtn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            background-color: #ef4444;
+            color: white;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        }
+        body.fullscreen-active #exitFullscreenBtn {
+            display: flex;
+        }
+    </style>
+</head>
+<body data-mode="flex" data-content="text">
+
+    <button id="exitFullscreenBtn" class="btn">✕ Exit Fullscreen</button>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>Layout Studio UI</h1>
+        </div>
+        
+        <div class="sidebar-content">
+            <div class="section-title">Core Setup</div>
+            
+            <div class="control-group">
+                <label for="layoutMode">Layout Engine Mode</label>
+                <select id="layoutMode">
+                    <option value="flex">Flexbox Engine</option>
+                    <option value="grid">CSS Grid Engine</option>
+                    <option value="inline">Inline-Block Flow</option>
+                    <option value="float">Legacy Float System</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <div class="range-label-container">
+                    <label for="itemWidth">All Items Width (<span id="widthVal">120</span>px)</label>
+                </div>
+                <input type="range" id="itemWidth" min="60" max="350" value="130">
+            </div>
+
+            <div class="control-group">
+                <div class="range-label-container">
+                    <label for="itemHeight">All Items Height (<span id="itemHeightVal">120</span>px)</label>
+                </div>
+                <input type="range" id="itemHeight" min="60" max="350" value="130">
+            </div>
+
+            <div class="control-group">
+                <div class="range-label-container">
+                    <label for="layoutGap">Space Gap / Margin (<span id="gapVal">12</span>px)</label>
+                </div>
+                <input type="range" id="layoutGap" min="0" max="40" value="12">
+            </div>
+
+            <div class="section-title">Engine Properties</div>
+
+            <div class="cond-flex">
+                <div class="control-group">
+                    <label for="flexDirection">Flex Direction</label>
+                    <select id="flexDirection">
+                        <option value="row">row</option>
+                        <option value="row-reverse">row-reverse</option>
+                        <option value="column">column</option>
+                        <option value="column-reverse">column-reverse</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="justifyContent">Justify Content (Main Axis)</label>
+                    <select id="justifyContent">
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                        <option value="space-between">space-between</option>
+                        <option value="space-around">space-around</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="alignItems">Align Items (Cross Axis)</label>
+                    <select id="alignItems">
+                        <option value="stretch">stretch</option>
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="flexWrap">Flex Wrap</label>
+                    <select id="flexWrap">
+                        <option value="wrap">wrap</option>
+                        <option value="nowrap">nowrap</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="cond-grid">
+                <div class="control-group">
+                    <label for="gridCols">Columns Configuration</label>
+                    <select id="gridCols">
+                        <option value="repeat(3, minmax(0, 1fr))">3 Equal Columns (1fr)</option>
+                        <option value="repeat(auto-fill, minmax(130px, 1fr))">Responsive Auto-Fill</option>
+                        <option value="1fr 2fr 1fr">Custom Mix (1fr 2fr 1fr)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="justifyItems">Justify Items</label>
+                    <select id="justifyItems">
+                        <option value="stretch">stretch</option>
+                        <option value="start">start</option>
+                        <option value="end">end</option>
+                        <option value="center">center</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="alignContent">Align Items</label>
+                    <select id="alignContent">
+                        <option value="stretch">stretch</option>
+                        <option value="start">start</option>
+                        <option value="end">end</option>
+                        <option value="center">center</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="cond-inline">
+                <div class="control-group">
+                    <label for="inlineAlign">Container Text-Align</label>
+                    <select id="inlineAlign">
+                        <option value="left">left</option>
+                        <option value="center">center</option>
+                        <option value="right">right</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="inlineVertical">Item Vertical-Align</label>
+                    <select id="inlineVertical">
+                        <option value="top">top</option>
+                        <option value="middle">middle</option>
+                        <option value="bottom">bottom</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="cond-float">
+                <div class="control-group">
+                    <label for="floatDirection">Float Direction</label>
+                    <select id="floatDirection">
+                        <option value="left">left</option>
+                        <option value="right">right</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="floatClear">Clearfix Mode wrapper</label>
+                    <select id="floatClear">
+                        <option value="active">Enabled (Fix Overflows)</option>
+                        <option value="none">Disabled (Broken Bounds)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section-title">Component Node Content</div>
+            
+            <div class="control-group">
+                <label for="contentType">Node Layout Base</label>
+                <select id="contentType">
+                    <option value="text">Structural Color Blocks</option>
+                    <option value="image">Media Component (Images)</option>
+                </select>
+            </div>
+
+            <div class="control-group cond-image">
+                <label for="imageCategory">Image Theme Generator</label>
+                <select id="imageCategory">
+                    <option value="tech">Technology Spectrum</option>
+                    <option value="nature">Wilderness & Nature</option>
+                    <option value="architecture">Modern Architecture</option>
+                    <option value="animals">Fauna & Animals</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Manage Item Elements</label>
+                <div class="btn-group" style="margin-bottom: 10px;">
+                    <button class="btn" id="addItemBtn">+ Add Card</button>
+                    <button class="btn" id="removeItemBtn">- Remove</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Dynamic Text Modifiers</label>
+                <div class="text-inputs-container" id="textInputsContainer">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace">
+        
+        <div class="top-action-bar">
+            <button class="btn btn-accent" id="fullscreenBtn">⛶ Go Full Screen</button>
+        </div>
+
+        <div class="preview-viewport">
+            <div id="layout-sandbox" class="clearfix">
+                </div>
+        </div>
+
+        <div class="code-panel">
+            <div class="code-tabs">
+                <button class="tab-btn active" onclick="switchTab('css')">Container CSS</button>
+                <button class="tab-btn" onclick="switchTab('html')">Structure HTML</button>
+            </div>
+            <button class="btn copy-btn" id="copyBtn">Copy Snippet</button>
+            <pre><code id="codeOutput"></code></pre>
+        </div>
+    </div>
+
+    <script>
+        // Data arrays holding string properties for child blocks
+        let itemsData = ["Tech Hub alpha", "Creative Core", "Data Hub", "Asset Node"];
+        let activeTab = 'css';
+
+        // Image category databases maps
+        const imageThemes = {
+            tech: [
+                "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&auto=format&fit=crop&q=60"
+            ],
+            nature: [
+                "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1472214222541-d510753a8707?w=400&auto=format&fit=crop&q=60"
+            ],
+            architecture: [
+                "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&auto=format&fit=crop&q=60"
+            ],
+            animals: [
+                "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=400&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1507666405895-422efe53f00d?w=400&auto=format&fit=crop&q=60"
+            ]
+        };
+
+        // DOM target declarations hooks
+        const body = document.body;
+        const sandbox = document.getElementById('layout-sandbox');
+        const codeOutput = document.getElementById('codeOutput');
+        const textInputsContainer = document.getElementById('textInputsContainer');
+        
+        // Element Inputs
+        const layoutMode = document.getElementById('layoutMode');
+        const itemWidth = document.getElementById('itemWidth');
+        const widthVal = document.getElementById('widthVal');
+        const itemHeight = document.getElementById('itemHeight');
+        const itemHeightVal = document.getElementById('itemHeightVal');
+        const layoutGap = document.getElementById('layoutGap');
+        const gapVal = document.getElementById('gapVal');
+        const contentType = document.getElementById('contentType');
+        const imageCategory = document.getElementById('imageCategory');
+
+        // Layout Parameters Elements Options
+        const flexDirection = document.getElementById('flexDirection');
+        const justifyContent = document.getElementById('justifyContent');
+        const alignItems = document.getElementById('alignItems');
+        const flexWrap = document.getElementById('flexWrap');
+        const gridCols = document.getElementById('gridCols');
+        const justifyItems = document.getElementById('justifyItems');
+        const alignContent = document.getElementById('alignContent');
+        const inlineAlign = document.getElementById('inlineAlign');
+        const inlineVertical = document.getElementById('inlineVertical');
+        const floatDirection = document.getElementById('floatDirection');
+        const floatClear = document.getElementById('floatClear');
+
+        // Interactivity Buttons
+        const addItemBtn = document.getElementById('addItemBtn');
+        const removeItemBtn = document.getElementById('removeItemBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+
+        // Dynamic structural text array builder loop UI 
+        function rebuildTextInputUI() {
+            textInputsContainer.innerHTML = '';
+            itemsData.forEach((text, index) => {
+                const row = document.createElement('div');
+                row.className = 'item-text-row';
+                
+                const label = document.createElement('span');
+                label.textContent = `Card ${index + 1}:`;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = text;
+                input.dataset.index = index;
+                
+                input.addEventListener('input', (e) => {
+                    itemsData[e.target.dataset.index] = e.target.value;
+                    renderSandboxItemsOnly();
+                    updateLayoutEngine();
+                });
+
+                row.appendChild(label);
+                row.appendChild(input);
+                textInputsContainer.appendChild(row);
+            });
+        }
+
+        // Direct isolated item compilation rendering processing
+        function renderSandboxItemsOnly() {
+            sandbox.innerHTML = '';
+            const useImage = contentType.value === 'image';
+            const selectedCategory = imageCategory.value;
+            const currentImages = imageThemes[selectedCategory];
+            
+            itemsData.forEach((text, index) => {
+                const item = document.createElement('div');
+                item.className = 'sandbox-item';
+                if(useImage) item.classList.add('has-image');
+                
+                // Track item dimensions from structural sliders
+                item.style.width = `${itemWidth.value}px`;
+                item.style.height = `${itemHeight.value}px`;
+
+                // Handle static positions properties under older engine modes
+                if (layoutMode.value === 'inline') {
+                    item.style.display = 'inline-block';
+                    item.style.margin = `${layoutGap.value}px`;
+                    item.style.verticalAlign = inlineVertical.value;
+                } else if (layoutMode.value === 'float') {
+                    item.style.display = 'block';
+                    item.style.float = floatDirection.value;
+                    item.style.margin = `${layoutGap.value}px`;
+                } else {
+                    item.style.display = ''; 
+                    item.style.float = '';
+                    item.style.margin = '';
+                }
+
+                const img = document.createElement('img');
+                // Selects images cleanly looping over lengths boundaries 
+                img.src = currentImages[index % currentImages.length];
+                img.alt = "Live sandbox structural visual assets resource";
+                
+                const p = document.createElement('p');
+                p.textContent = text;
+
+                item.appendChild(img);
+                item.appendChild(p);
+                sandbox.appendChild(item);
+            });
+        }
+
+        // Processing loop compiling configuration trees to strings updates
+        function updateLayoutEngine() {
+            const mode = layoutMode.value;
+            const contentMode = contentType.value;
+            
+            body.setAttribute('data-mode', mode);
+            body.setAttribute('data-content', contentMode);
+            
+            // Value updates
+            widthVal.textContent = itemWidth.value;
+            itemHeightVal.textContent = itemHeight.value;
+            gapVal.textContent = layoutGap.value;
+
+            sandbox.style.cssText = '';
+            if(floatClear.value === 'active' && mode === 'float') {
+                sandbox.classList.add('clearfix');
+            } else {
+                sandbox.classList.remove('clearfix');
+            }
+
+            renderSandboxItemsOnly();
+
+            let cssOutputString = '';
+            
+            // Layout specific switch rules logic parser
+            if (mode === 'flex') {
+                sandbox.style.display = 'flex';
+                sandbox.style.gap = `${layoutGap.value}px`;
+                sandbox.style.flexDirection = flexDirection.value;
+                sandbox.style.justifyContent = justifyContent.value;
+                sandbox.style.alignItems = alignItems.value;
+                sandbox.style.flexWrap = flexWrap.value;
+
+                cssOutputString = `.parent-container {\n` +
+                                  `  display: flex;\n` +
+                                  `  gap: ${layoutGap.value}px;\n` +
+                                  `  flex-direction: ${flexDirection.value};\n` +
+                                  `  justify-content: ${justifyContent.value};\n` +
+                                  `  align-items: ${alignItems.value};\n` +
+                                  `  flex-wrap: ${flexWrap.value};\n` +
+                                  `}`;
+            } 
+            else if (mode === 'grid') {
+                sandbox.style.display = 'grid';
+                sandbox.style.gap = `${layoutGap.value}px`;
+                sandbox.style.gridTemplateColumns = gridCols.value;
+                sandbox.style.justifyItems = justifyItems.value;
+                sandbox.style.alignItems = alignContent.value;
+
+                cssOutputString = `.parent-container {\n` +
+                                  `  display: grid;\n` +
+                                  `  gap: ${layoutGap.value}px;\n` +
+                                  `  grid-template-columns: ${gridCols.value};\n` +
+                                  `  justify-items: ${justifyItems.value};\n` +
+                                  `  align-items: ${alignContent.value};\n` +
+                                  `}`;
+            } 
+            else if (mode === 'inline') {
+                sandbox.style.textAlign = inlineAlign.value;
+
+                cssOutputString = `.parent-container {\n` +
+                                  `  text-align: ${inlineAlign.value};\n` +
+                                  `}\n\n` +
+                                  `.child-items {\n` +
+                                  `  display: inline-block;\n` +
+                                  `  width: ${itemWidth.value}px;\n` +
+                                  `  height: ${itemHeight.value}px;\n` +
+                                  `  margin: ${layoutGap.value}px;\n` +
+                                  `  vertical-align: ${inlineVertical.value};\n` +
+                                  `}`;
+            } 
+            else if (mode === 'float') {
+                cssOutputString = '';
+                if(floatClear.value === 'active') {
+                    cssOutputString += `.parent-container::after {\n` +
+                                       `  content: "";\n` +
+                                       `  display: table;\n` +
+                                       `  clear: both;\n` +
+                                       `}\n\n`;
+                }
+                cssOutputString += `.child-items {\n` +
+                                   `  float: ${floatDirection.value};\n` +
+                                   `  width: ${itemWidth.value}px;\n` +
+                                   `  height: ${itemHeight.value}px;\n` +
+                                   `  margin: ${layoutGap.value}px;\n` +
+                                   `}`;
+            }
+
+            if(mode === 'flex' || mode === 'grid') {
+                cssOutputString += `\n\n.child-items {\n` +
+                                   `  width: ${itemWidth.value}px;\n` +
+                                   `  height: ${itemHeight.value}px;\n` +
+                                   `}`;
+            }
+
+            // Tab rendering validation check patterns
+            if (activeTab === 'css') {
+                codeOutput.textContent = cssOutputString;
+            } else {
+                let htmlString = `<div class="parent-container${(mode === 'float' && floatClear.value === 'active') ? ' clearfix' : ''}">\n`;
+                itemsData.forEach((text) => {
+                    htmlString += `  <div class="child-items">\n`;
+                    if(contentMode === 'image') {
+                        htmlString += `    <img src="path/to/dynamic-image.jpg" alt="Visual asset" />\n`;
+                    }
+                    htmlString += `    <p>${text}</p>\n`;
+                    htmlString += `  </div>\n`;
+                });
+                htmlString += `</div>`;
+                codeOutput.textContent = htmlString;
+            }
+        }
+
+        // Screen state modification triggers
+        fullscreenBtn.addEventListener('click', () => {
+            body.classList.add('fullscreen-active');
+            updateLayoutEngine();
+        });
+
+        const exitFullscreen = () => {
+            body.classList.remove('fullscreen-active');
+            updateLayoutEngine();
+        };
+
+        exitFullscreenBtn.addEventListener('click', exitFullscreen);
+        
+        // Escape hotkey tracking catch logic
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && body.classList.contains('fullscreen-active')) {
+                exitFullscreen();
+            }
+        });
+
+        // Code tab handlers rules
+        window.switchTab = function(tab) {
+            activeTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateLayoutEngine();
+        }
+
+        // Modification mutation hooks
+        addItemBtn.addEventListener('click', () => {
+            if (itemsData.length < 24) { 
+                itemsData.push(`Card element ${itemsData.length + 1}`);
+                rebuildTextInputUI();
+                updateLayoutEngine();
+            }
+        });
+
+        removeItemBtn.addEventListener('click', () => {
+            if (itemsData.length > 1) {
+                itemsData.pop();
+                rebuildTextInputUI();
+                updateLayoutEngine();
+            }
+        });
+
+        // Clipboard managers implementation code 
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(codeOutput.textContent);
+            const initialText = copyBtn.textContent;
+            copyBtn.textContent = 'Copied Code!';
+            copyBtn.style.backgroundColor = '#10b981';
+            setTimeout(() => {
+                copyBtn.textContent = initialText;
+                copyBtn.style.backgroundColor = '';
+            }, 1200);
+        });
+
+        // Event hooks mass registration loop array
+        const controlSelectors = [
+            layoutMode, itemWidth, itemHeight, layoutGap, contentType, imageCategory,
+            flexDirection, justifyContent, alignItems, flexWrap,
+            gridCols, justifyItems, alignContent,
+            inlineAlign, inlineVertical, floatDirection, floatClear
+        ];
+
+        controlSelectors.forEach(control => {
+            control.addEventListener('input', updateLayoutEngine);
+        });
+
+        // Initial setup initialization execution
+        rebuildTextInputUI();
+        updateLayoutEngine();
+    </script>
+</body>
+</html>
